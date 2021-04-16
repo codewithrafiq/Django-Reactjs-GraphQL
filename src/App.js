@@ -1,4 +1,4 @@
-import { gql, useQuery } from "@apollo/client";
+import { gql, useMutation, useQuery } from "@apollo/client";
 import {
   Avatar,
   Box,
@@ -13,19 +13,60 @@ import {
   TextField,
   Typography,
 } from "@material-ui/core";
-import React from "react";
+import React, { useState } from "react";
 import EditIcon from "@material-ui/icons/Edit";
 import DeleteIcon from "@material-ui/icons/Delete";
 const App = () => {
-  const { loading, error, data } = useQuery(gql`
-    {
-      todos {
-        id
-        title
-        date
-      }
-    }
-  `);
+  const [title, setTitle] = useState("");
+  const [todoid, setTodoid] = useState(null);
+  const [edittodo, setEdittodo] = useState(false);
+  const { loading, error, data } = useQuery(GET_TODOS);
+  const [createTodo] = useMutation(Add_TODO, {
+    onCompleted(data) {
+      setTitle("");
+    },
+    refetchQueries: [
+      {
+        query: GET_TODOS,
+      },
+    ],
+  });
+  const [updateTodo] = useMutation(EDIT_TODO, {
+    onCompleted(data) {
+      // console.log("Update todo", data);
+      setTitle("");
+      setEdittodo(false);
+    },
+    refetchQueries: [
+      {
+        query: GET_TODOS,
+      },
+    ],
+  });
+  const [delateTodo] = useMutation(DELETE_TODO, {
+    onCompleted(data) {
+      console.log("Delate todo", data);
+    },
+    refetchQueries: [
+      {
+        query: GET_TODOS,
+      },
+    ],
+  });
+  const addNewTodo = () => {
+    createTodo({ variables: { title: title } });
+  };
+  const editButtonHandeler = (id, title) => {
+    setTitle(title);
+    setEdittodo(true);
+    setTodoid(id);
+  };
+  const editAtodo = () => {
+    updateTodo({ variables: { id: todoid, title: title } });
+  };
+  const delateSingleTodo = (id) => {
+    delateTodo({ variables: { id: id } });
+  };
   if (loading) return <h1>Loding...</h1>;
   if (error) return <h1>Error...</h1>;
   return (
@@ -42,13 +83,31 @@ const App = () => {
       >
         <TextField
           fullWidth
+          value={title}
           id="outlined-basic"
-          label="Add Todo.."
+          label={edittodo ? "Edit Todo" : "Add Todo.."}
           variant="outlined"
+          onChange={(e) => setTitle(e.target.value)}
         />
-        <Button variant="contained" color="primary">
-          Add
-        </Button>
+        {edittodo ? (
+          <Button
+            onClick={editAtodo}
+            disabled={!title}
+            variant="contained"
+            color="primary"
+          >
+            Edit
+          </Button>
+        ) : (
+          <Button
+            onClick={addNewTodo}
+            disabled={!title}
+            variant="contained"
+            color="primary"
+          >
+            Add
+          </Button>
+        )}
       </Box>
       <Box
         component="div"
@@ -71,10 +130,12 @@ const App = () => {
               </ListItemIcon>
               <ListItemText primary={item?.title} />
               <ListItemSecondaryAction>
-                <IconButton>
+                <IconButton
+                  onClick={() => editButtonHandeler(item?.id, item?.title)}
+                >
                   <EditIcon color="primary" />
                 </IconButton>
-                <IconButton>
+                <IconButton onClick={() => delateSingleTodo(item?.id)}>
                   <DeleteIcon color="secondary" />
                 </IconButton>
               </ListItemSecondaryAction>
@@ -86,4 +147,42 @@ const App = () => {
   );
 };
 
+const GET_TODOS = gql`
+  {
+    todos {
+      id
+      title
+      date
+    }
+  }
+`;
+const Add_TODO = gql`
+  mutation CreateTodo($title: String!) {
+    createTodo(title: $title) {
+      todo {
+        id
+        title
+        date
+      }
+    }
+  }
+`;
+const EDIT_TODO = gql`
+  mutation UpdateTodo($id: Int!, $title: String!) {
+    updateTodo(id: $id, title: $title) {
+      todo {
+        id
+        title
+        date
+      }
+    }
+  }
+`;
+const DELETE_TODO = gql`
+  mutation DelateTodo($id: Int!) {
+    delateTodo(id: $id) {
+      message
+    }
+  }
+`;
 export default App;
