@@ -8,3 +8,4 @@
 ### [🔥🔥Part - 2 - Django Graphql CRUD](https://github.com/codewithrafiq/Django-Reactjs-GraphQL/tree/431778a56b634194004fdd9199bf752bb4dd7307)
 ### [🔥🔥Part - 3 - React Apollo Client Query](https://github.com/codewithrafiq/Django-Reactjs-GraphQL/tree/a5e1738455357267f6ba6f455415b33bbac6b987)
 ### [🔥🔥Part - 4 - React Apollo Client ADD ,EDIT ,DELETE](https://github.com/codewithrafiq/Django-Reactjs-GraphQL/tree/76ba472105ca83a4644129817d57bae0dbc69173)
+### [🔥🔥Django + Reactjs + GraphQL JWT Authentication || Part-1](https://github.com/codewithrafiq/Django-Reactjs-GraphQL/tree/9318e6f7031fa3215878edda98034be11497d591)
