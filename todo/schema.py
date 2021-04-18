@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 class TodoType(DjangoObjectType):
     class Meta:
         model = Todo
-        fields = ("id", "title", "date")
+        # fields = ("id", "title", "date")
 
 
 class UserType(DjangoObjectType):
@@ -18,12 +18,21 @@ class UserType(DjangoObjectType):
 
 class Query(graphene.ObjectType):
     todos = graphene.List(TodoType, id=graphene.Int())
+    user = graphene.Field(UserType)
 
     @login_required
     def resolve_todos(self, info, id=None):
+        user = info.context.user
         if id:
             return Todo.objects.filter(id=id)
-        return Todo.objects.all().order_by("-id")
+        return Todo.objects.filter(user=user).order_by("-id")
+
+    @login_required
+    def resolve_user(self, info):
+        user = info.context.user
+        if user.is_anonymous:
+            raise Exception("Login Required")
+        return user
 
 
 class CreateTodo(graphene.Mutation):
@@ -51,7 +60,10 @@ class UpdateTodo(graphene.Mutation):
 
     @login_required
     def mutate(self, info, id, title):
+        user = info.context.user
         todo = Todo.objects.get(id=id)
+        if user != todo.user:
+            raise Exception("It's Not Your Todo Data!!")
         todo.title = title
         todo.save()
         return UpdateTodo(todo=todo)
@@ -65,7 +77,10 @@ class DelateTodo(graphene.Mutation):
 
     @login_required
     def mutate(self, info, id):
+        user = info.context.user
         todo = Todo.objects.get(id=id)
+        if user != todo.user:
+            raise Exception("It's Not Your Todo !!")
         todo.delete()
         return DelateTodo(message=f"ID {id} id Delated")
 

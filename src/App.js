@@ -21,6 +21,9 @@ const App = () => {
   const [todoid, setTodoid] = useState(null);
   const [edittodo, setEdittodo] = useState(false);
   const { loading, error, data } = useQuery(GET_TODOS);
+  const { loading: userloding, error: usererror, data: userdata } = useQuery(
+    GET_USER_DATA
+  );
   const [createTodo] = useMutation(Add_TODO, {
     onCompleted(data) {
       setTitle("");
@@ -33,7 +36,7 @@ const App = () => {
   });
   const [updateTodo] = useMutation(EDIT_TODO, {
     onCompleted(data) {
-      // console.log("Update todo", data);
+      console.log("Update todo", data);
       setTitle("");
       setEdittodo(false);
     },
@@ -59,7 +62,7 @@ const App = () => {
   const editButtonHandeler = (id, title) => {
     setTitle(title);
     setEdittodo(true);
-    setTodoid(id);
+    setTodoid(parseInt(id));
   };
   const editAtodo = () => {
     updateTodo({ variables: { id: todoid, title: title } });
@@ -67,18 +70,26 @@ const App = () => {
   const delateSingleTodo = (id) => {
     delateTodo({ variables: { id: id } });
   };
+  const logoutNow = () => {
+    window.localStorage.clear();
+    window.location.href = "/";
+  };
   if (loading) return <h1>Loding...</h1>;
   if (error) return <h1>Error...</h1>;
   return (
     <Container>
       <Typography align="center" variant="h3">
-        Todo App
+        Welcome to Todo App "{userdata?.user?.username}"
+        <Button color="secondary" variant="contained" onClick={logoutNow}>
+          Logout
+        </Button>
       </Typography>
       <Box
         style={{
           maxWidth: "500px",
           margin: "0 auto",
           display: "flex",
+          marginTop: "15px",
         }}
       >
         <TextField
@@ -135,7 +146,9 @@ const App = () => {
                 >
                   <EditIcon color="primary" />
                 </IconButton>
-                <IconButton onClick={() => delateSingleTodo(item?.id)}>
+                <IconButton
+                  onClick={() => delateSingleTodo(parseInt(item?.id))}
+                >
                   <DeleteIcon color="secondary" />
                 </IconButton>
               </ListItemSecondaryAction>
@@ -147,6 +160,14 @@ const App = () => {
   );
 };
 
+const GET_USER_DATA = gql`
+  {
+    user {
+      id
+      username
+    }
+  }
+`;
 const GET_TODOS = gql`
   {
     todos {
